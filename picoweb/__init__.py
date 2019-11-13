@@ -90,7 +90,7 @@ class WebApp:
         else:
             self.pkg = None
         if serve_static:
-            self.url_map.append((re.compile("^/(static/.+)"), self.handle_static))
+            self.url_map.append((re.compile("^/(.+)"), self.handle_static))
         self.mounts = []
         self.inited = False
         # Instantiated lazily
@@ -260,10 +260,13 @@ class WebApp:
         if not content_type:
             content_type = get_mime_type(fname)
         try:
+            print("Sending file " + fname)
             with pkg_resources.resource_stream(self.pkg, fname) as f:
                 yield from start_response(writer, content_type, "200", headers)
                 yield from sendstream(writer, f)
+                print("Done.")
         except OSError as e:
+            print("Exception!")
             if e.args[0] == uerrno.ENOENT:
                 yield from http_error(writer, "404")
             else:
@@ -275,7 +278,7 @@ class WebApp:
         if ".." in path:
             yield from http_error(resp, "403")
             return
-        yield from self.sendfile(resp, path)
+        yield from self.sendfile(resp, "/sd/web/" + path)
 
     def init(self):
         """Initialize a web application. This is for overriding by subclasses.
